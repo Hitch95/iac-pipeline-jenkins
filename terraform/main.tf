@@ -10,7 +10,25 @@ provider "aws" {
   }
 }
 
+# Use commit information for unique AMI
 resource "aws_instance" "demo" {
-  ami           = "ami-12345678"
+  # Use a combination of base AMI and commit hash
+  ami           = "ami-${substr(timestamp(), 0, 8)}${substr(uuid(), 0, 4)}"  # This generates a unique value on each apply
   instance_type = "t2.micro"
+  
+  tags = {
+    Name        = "demo-instance"
+    Environment = "development"
+    Timestamp   = timestamp()  # Records when this instance was created
+    BuildID     = "${formatdate("YYYYMMDDhhmmss", timestamp())}" # Unique ID for each build
+  }
+}
+
+# Output the instance details
+output "instance_id" {
+  value = aws_instance.demo.id
+}
+
+output "ami_used" {
+  value = aws_instance.demo.ami
 }
